@@ -21,7 +21,7 @@ export default function Home() {
                 opacity: 0.7,
                 fontSize: '0.9rem'
             }}>
-                <p>✨ מחכה לחגוג איתכן! ✨</p>
+                <p dir="rtl">✨ מחכה לחגוג איתכן! ✨</p>
             </footer>
         </main>
     );

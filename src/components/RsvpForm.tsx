@@ -44,7 +44,7 @@ export default function RsvpForm() {
 
     if (status === 'success') {
         return (
-            <section className={`glass-card fade-in ${styles.rsvpSection}`}>
+            <section className={`glass-card fade-in ${styles.rsvpSection}`} dir="rtl">
                 <h3 className={styles.successHeading}>תודה רבה!</h3>
                 <p className={styles.successText}>האישור התקבל. נתראה במסיבה!</p>
                 <button className="gold-btn" onClick={() => setStatus('idle')}>
@@ -55,7 +55,7 @@ export default function RsvpForm() {
     }
 
     return (
-        <section className={`glass-card fade-in ${styles.rsvpSection}`}>
+        <section className={`glass-card fade-in ${styles.rsvpSection}`} dir="rtl">
             <h3 className={styles.heading}>אישור הגעה</h3>
             <p className={styles.subtitle}>נשמח לראות את כולכן!</p>
 

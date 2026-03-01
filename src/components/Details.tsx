@@ -3,7 +3,7 @@ import styles from './Details.module.css';
 
 export default function Details() {
     return (
-        <section className="glass-card fade-in">
+        <section className="glass-card fade-in" dir="rtl">
             <h3 className={styles.heading}>פרטי האירוע</h3>
 
             <div className={styles.timeline}>
