@@ -9,8 +9,8 @@
   --color-surface: rgba(255, 255, 255, 0.05);
   /* Glassmorphism base */
 
-  --font-heading: var(--font-playfair), serif;
-  --font-body: var(--font-assistant), sans-serif;
+  --font-heading: 'Baloo 2', cursive;
+  --font-body: 'Nunito', sans-serif;
 }
 
 * {

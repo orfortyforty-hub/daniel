@@ -1,13 +1,9 @@
 import type { Metadata } from 'next'
-import { Nunito, Baloo_2 } from 'next/font/google'
 import './globals.css'
-
-const nunito = Nunito({ subsets: ['latin'], variable: '--font-assistant' })
-const baloo = Baloo_2({ subsets: ['latin'], weight: ['400', '700', '800'], variable: '--font-playfair' })
 
 export const metadata: Metadata = {
   title: 'Daniel is 12!',
-  description: 'Daniel\'s 12th Birthday Party Invite',
+  description: "Daniel's 12th Birthday Party Invite",
 }
 
 export default function RootLayout({
@@ -17,7 +13,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" dir="ltr">
-      <body className={`${nunito.variable} ${baloo.variable}`}>{children}</body>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700;800&family=Nunito:wght@400;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   )
 }

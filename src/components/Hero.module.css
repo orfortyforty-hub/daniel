@@ -44,8 +44,9 @@
 }
 
 .subtitle {
-    font-family: var(--font-body);
-    font-size: 1.1rem;
+    font-family: var(--font-heading);
+    font-size: 1.3rem;
+    font-weight: 700;
     color: var(--color-text);
     letter-spacing: 1px;
     background: rgba(0, 0, 0, 0.4);
@@ -76,8 +77,9 @@
 }
 
 .description {
-    font-family: var(--font-body);
+    font-family: var(--font-heading);
     font-size: 1.4rem;
+    font-weight: 700;
     color: #fff;
 }
 
