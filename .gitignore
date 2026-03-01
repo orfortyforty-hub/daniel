@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# service account keys (NEVER commit these)
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# local data
+/data

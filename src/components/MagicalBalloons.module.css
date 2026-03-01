@@ -1,0 +1,92 @@
+.balloonContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    /* Let clicks pass through except on balloons */
+    z-index: 10;
+    overflow: hidden;
+}
+
+.balloonWrapper {
+    position: absolute;
+    bottom: -150px;
+    width: 60px;
+    height: 150px;
+    cursor: pointer;
+    pointer-events: auto;
+    /* Re-enable clicks for the balloons */
+    animation: floatUp 15s linear infinite;
+    transition: transform 0.2s;
+}
+
+.balloonWrapper:hover {
+    transform: scale(1.1);
+}
+
+.balloon {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+}
+
+/* Different starting positions, delays and durations for a natural look */
+.balloon-0 {
+    left: 10%;
+    animation-duration: 18s;
+    animation-delay: 0s;
+}
+
+.balloon-1 {
+    left: 30%;
+    animation-duration: 22s;
+    animation-delay: 5s;
+}
+
+.balloon-2 {
+    left: 50%;
+    animation-duration: 20s;
+    animation-delay: 2s;
+}
+
+.balloon-3 {
+    left: 70%;
+    animation-duration: 25s;
+    animation-delay: 8s;
+}
+
+.balloon-4 {
+    left: 85%;
+    animation-duration: 17s;
+    animation-delay: 12s;
+}
+
+.balloon-5 {
+    left: 20%;
+    animation-duration: 24s;
+    animation-delay: 15s;
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+
+    50% {
+        transform: translateY(-60vh) rotate(5deg);
+    }
+
+    100% {
+        transform: translateY(-120vh) rotate(-5deg);
+        opacity: 1;
+    }
+}
+
+@media (max-width: 600px) {
+    .balloonWrapper {
+        width: 45px;
+    }
+}

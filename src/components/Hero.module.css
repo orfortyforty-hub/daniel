@@ -1,0 +1,93 @@
+.heroSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    animation: fadeIn 1s ease-out;
+    overflow: hidden;
+}
+
+.imageWrapper {
+    position: relative;
+    width: 450px;
+    height: 450px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 2rem;
+    will-change: transform;
+    /* Add a subtle glow behind the image */
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.2) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.spinningImage {
+    border-radius: 50%;
+    object-fit: contain;
+    filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.spinningImage:hover,
+.spinningImage:active {
+    filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.8));
+}
+
+.textContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.subtitle {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    color: var(--color-text);
+    letter-spacing: 1px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 0.5rem 1.2rem;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    max-width: 90%;
+    word-wrap: break-word;
+}
+
+.title {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    color: var(--color-accent);
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.4);
+    line-height: 1.1;
+    margin: 0.5rem 0;
+}
+
+.divider {
+    width: 60px;
+    height: 2px;
+    background: var(--color-accent);
+    margin: 1rem 0;
+    box-shadow: 0 0 5px var(--color-accent);
+}
+
+.description {
+    font-family: var(--font-body);
+    font-size: 1.4rem;
+    color: #fff;
+}
+
+@media (max-width: 480px) {
+    .title {
+        font-size: 2.8rem;
+    }
+
+    .imageWrapper {
+        width: 375px;
+        height: 375px;
+    }
+}

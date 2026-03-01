@@ -1,0 +1,107 @@
+.rsvpSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.heading {
+    font-size: 2rem;
+    color: var(--color-accent);
+    margin-bottom: 0.2rem;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.inputGroup {
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.addButton {
+    background: var(--color-surface);
+    border: 1px solid var(--color-accent);
+    color: var(--color-accent);
+    padding: 0 1.5rem;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.addButton:hover:not(:disabled) {
+    background: rgba(212, 175, 55, 0.2);
+}
+
+.addButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.attendeesList {
+    width: 100%;
+    margin-top: 1.5rem;
+    text-align: right;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.attendeesList h4 {
+    font-size: 1.1rem;
+    color: var(--color-accent);
+    margin-bottom: 0.8rem;
+}
+
+.attendeesList ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.attendeeItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+}
+
+.removeButton {
+    background: none;
+    border: none;
+    color: #ff6b6b;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: transform 0.2s ease;
+}
+
+.removeButton:hover {
+    transform: scale(1.2);
+}
+
+.successHeading {
+    font-size: 2.5rem;
+    color: var(--color-accent);
+    margin-bottom: 1rem;
+}
+
+.successText {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.errorText {
+    color: #ff6b6b;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+}
