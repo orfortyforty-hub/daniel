@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { Assistant, Playfair_Display } from 'next/font/google'
+import { Nunito, Pacifico } from 'next/font/google'
 import './globals.css'
 
-const assistant = Assistant({ subsets: ['hebrew'], variable: '--font-assistant' })
-const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' })
+const nunito = Nunito({ subsets: ['latin'], variable: '--font-assistant' })
+const pacifico = Pacifico({ subsets: ['latin'], weight: '400', variable: '--font-playfair' })
 
 export const metadata: Metadata = {
   title: 'Daniel is 12!',
@@ -16,8 +16,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="he" dir="rtl">
-      <body className={`${assistant.variable} ${playfair.variable}`}>{children}</body>
+    <html lang="en" dir="ltr">
+      <body className={`${nunito.variable} ${pacifico.variable}`}>{children}</body>
     </html>
   )
 }
