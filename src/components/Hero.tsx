@@ -190,8 +190,8 @@ export default function Hero() {
                 style={{ cursor: 'grab' }}
             >
                 <Image
-                    src="/img/center.png"
-                    alt="Daniel 12 Center"
+                    src="/img/center2.png"
+                    alt="Danielle Bat Mitzvah"
                     width={525}
                     height={525}
                     priority
@@ -200,10 +200,9 @@ export default function Hero() {
                 />
             </div>
             <div className={styles.textContent}>
-                <h2 className={styles.subtitle}>היי! הוזמנת רשמית!</h2>
-                <h1 className={styles.title}>דניאל</h1>
+                <h2 className={styles.subtitle}>Hey! It&apos;s Danielle&apos;s Bat Mitzvah!</h2>
                 <div className={styles.divider}></div>
-                <p className={styles.description}>חוגגת בת מצווה!</p>
+                <p className={styles.description}>Let&apos;s have some fun!</p>
             </div>
         </section>
     );

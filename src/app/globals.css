@@ -3,9 +3,9 @@
   /* Deep night sky dark blue */
   --color-text: #f0e6d2;
   /* Soft parchment/gold text */
-  --color-accent: #d4af37;
-  /* Metallic gold */
-  --color-accent-hover: #f1c40f;
+  --color-accent: #5bc8f5;
+  /* Light sky blue */
+  --color-accent-hover: #87d9ff;
   --color-surface: rgba(255, 255, 255, 0.05);
   /* Glassmorphism base */
 
@@ -30,8 +30,8 @@ body {
 
   /* Subtle magical gradient overlay */
   background-image:
-    radial-gradient(circle at 15% 50%, rgba(76, 29, 149, 0.15), transparent 25%),
-    radial-gradient(circle at 85% 30%, rgba(212, 175, 55, 0.08), transparent 25%);
+    radial-gradient(circle at 15% 50%, rgba(29, 99, 149, 0.15), transparent 25%),
+    radial-gradient(circle at 85% 30%, rgba(91, 200, 245, 0.08), transparent 25%);
 }
 
 h1,
@@ -60,7 +60,7 @@ h4,
   background: var(--color-surface);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(91, 200, 245, 0.1);
   border-radius: 16px;
   padding: 2rem;
   width: 100%;
@@ -70,9 +70,9 @@ h4,
 
 /* Buttons */
 .gold-btn {
-  background: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+  background: linear-gradient(135deg, #2196f3, #87d9ff, #1976d2, #b3e5fc, #0288d1);
   background-size: 200% 200%;
-  color: #1a1a1a;
+  color: #0b0f19;
   border: none;
   padding: 0.8rem 2rem;
   font-size: 1.1rem;
@@ -87,7 +87,7 @@ h4,
 .gold-btn:hover,
 .gold-btn:focus {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 15px rgba(91, 200, 245, 0.4);
 }
 
 .gold-btn:active {
@@ -97,7 +97,7 @@ h4,
 /* Input Fields */
 .input-elegant {
   background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(212, 175, 55, 0.3);
+  border: 1px solid rgba(91, 200, 245, 0.3);
   color: var(--color-text);
   padding: 0.8rem 1rem;
   border-radius: 8px;
@@ -111,7 +111,7 @@ h4,
 .input-elegant:focus {
   border-color: var(--color-accent);
   background: rgba(0, 0, 0, 0.4);
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 8px rgba(91, 200, 245, 0.2);
 }
 
 /* Animations */
