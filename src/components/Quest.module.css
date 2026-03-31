@@ -1,0 +1,137 @@
+.questContainer {
+    width: 100%;
+    max-width: 800px;
+    min-height: 400px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 20px;
+    border: 1px solid rgba(91, 200, 245, 0.2);
+    padding: 2rem;
+    text-align: center;
+}
+
+.title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    color: var(--color-accent);
+    margin-bottom: 1.5rem;
+}
+
+.riddleCard {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px dashed rgba(91, 200, 245, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.riddleText {
+    font-family: var(--font-body);
+    font-size: 1.1rem;
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+.scannerWrapper {
+    width: 100%;
+    margin-bottom: 1.5rem;
+}
+
+#reader {
+    width: 100% !important;
+    border: none !important;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.cancelBtn {
+    background: transparent;
+    border: 1px solid #ff4d4d;
+    color: #ff4d4d;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    cursor: pointer;
+}
+
+.errorText {
+    color: #ff4d4d;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    animation: shake 0.5s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}
+
+.clockDisplay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.clockDigitGroup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.digit {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 4rem;
+    font-weight: bold;
+    color: var(--color-accent);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(91, 200, 245, 0.4);
+    min-width: 100px;
+}
+
+.clockAdjust {
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.clockAdjust:hover {
+    transform: scale(1.2);
+    text-shadow: 0 0 10px var(--color-accent);
+}
+
+.separator {
+    font-size: 4rem;
+    font-weight: bold;
+    color: var(--color-accent);
+}
+
+.completed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 2rem 0;
+}
+
+.completeIcon {
+    animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+.fireworks {
+    font-size: 2rem;
+    margin-top: 1rem;
+    animation: float 2s infinite ease-in-out;
+}

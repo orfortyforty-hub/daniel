@@ -1,0 +1,107 @@
+.partyMain {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+    padding-top: 2rem;
+}
+
+.gameSection {
+    width: 100%;
+    margin-bottom: 4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.linksGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 2rem;
+}
+
+.gameContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    width: 100%;
+}
+
+.gameCard {
+    background: var(--color-surface);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(91, 200, 245, 0.1);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.gameCard:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-accent);
+    box-shadow: 0 8px 32px rgba(91, 200, 245, 0.2);
+}
+
+.cardIcon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    filter: drop-shadow(0 0 5px rgba(91, 200, 245, 0.3));
+}
+
+.cardTitle {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    color: var(--color-accent);
+    margin: 0;
+}
+
+.cardDescription {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--color-text);
+    opacity: 0.8;
+    margin: 0;
+}
+
+.canvasSection {
+    width: 100%;
+    background: #ffffff;
+    padding: 0;
+    margin-top: 4rem;
+    position: relative;
+}
+
+.canvasSection :global(.container) {
+    background: var(--color-bg);
+    max-width: 100% !important;
+}
+
+.placeholderCanvas {
+    width: 100%;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(91, 200, 245, 0.2);
+    border-radius: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--color-accent);
+    font-family: var(--font-body);
+    opacity: 0.5;
+}
+

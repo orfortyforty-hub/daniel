@@ -1,0 +1,25 @@
+.backContainer {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 1rem;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.backLink {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-accent);
+    text-decoration: none;
+    font-family: var(--font-body);
+    font-weight: 600;
+    transition: all 0.2s ease;
+    opacity: 0.8;
+}
+
+.backLink:hover {
+    opacity: 1;
+    transform: translateX(-4px);
+}

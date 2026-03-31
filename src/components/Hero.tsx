@@ -11,6 +11,7 @@ export default function Hero() {
     const isSpinningRef = useRef(false);
     const isDefaultSpinRef = useRef(true);
     const animFrameRef = useRef<number | null>(null);
+    const animateRef = useRef<() => void>(() => {});
     const lastTouchXRef = useRef(0);
     const lastTouchTimeRef = useRef(0);
     const isDraggingRef = useRef(false);
@@ -43,17 +44,21 @@ export default function Hero() {
             wrapperRef.current.style.transform = `rotate(${rotationRef.current}deg)`;
         }
 
-        animFrameRef.current = requestAnimationFrame(animate);
+        animFrameRef.current = requestAnimationFrame(() => animateRef.current());
     }, []);
+
+    useEffect(() => {
+        animateRef.current = animate;
+    }, [animate]);
 
     const startSpin = useCallback((vel: number, isDefault = false) => {
         velocityRef.current = vel;
         isDefaultSpinRef.current = isDefault;
         if (!isSpinningRef.current) {
             isSpinningRef.current = true;
-            animFrameRef.current = requestAnimationFrame(animate);
+            animFrameRef.current = requestAnimationFrame(() => animateRef.current());
         }
-    }, [animate]);
+    }, []);
 
     const stopSpin = useCallback(() => {
         isSpinningRef.current = false;
@@ -180,7 +185,7 @@ export default function Hero() {
             window.removeEventListener('mouseup', handleMouseUp);
             if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
         };
-    }, [startSpin, stopSpin, animate]);
+    }, [startSpin, stopSpin]);
 
     return (
         <section className={styles.heroSection}>

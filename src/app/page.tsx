@@ -19,9 +19,13 @@ export default function Home() {
                 marginTop: '2rem',
                 paddingBottom: '2rem',
                 opacity: 0.7,
-                fontSize: '0.9rem'
+                fontSize: '0.9rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '1rem'
             }}>
-                <p dir="rtl">✨ מחכה לחגוג איתכן! ✨</p>
+                <a href="/party" style={{ color: 'inherit', textDecoration: 'none', fontSize: '0.7rem' }}>test</a>
             </footer>
         </main>
     );

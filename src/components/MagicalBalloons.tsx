@@ -1,17 +1,11 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import confetti from 'canvas-confetti';
 import styles from './MagicalBalloons.module.css';
 
 export default function MagicalBalloons() {
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    const handlePop = (e: React.MouseEvent, index: number) => {
+    const handlePop = (e: React.MouseEvent) => {
         // Hide balloon on click by finding the clicked element
         const target = e.currentTarget as HTMLElement;
         target.style.display = 'none';
@@ -29,15 +23,13 @@ export default function MagicalBalloons() {
         });
     };
 
-    if (!mounted) return null;
-
     return (
         <div className={styles.balloonContainer}>
             {Array.from({ length: 6 }).map((_, i) => (
                 <div
                     key={i}
                     className={`${styles.balloonWrapper} ${styles[`balloon-${i}`]}`}
-                    onClick={(e) => handlePop(e, i)}
+                    onClick={handlePop}
                     title="Click me for magic!"
                 >
                     <svg className={styles.balloon} viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
