@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Type, Download, Trash2, Paintbrush, ChevronUp, Eraser } from 'lucide-react';
+import { Type, Download, Trash2, Paintbrush, ChevronUp, Eraser, Hand, Undo2, Redo2 } from 'lucide-react';
 import styles from './SharedCanvas.module.css';
 
 type Point = { x: number; y: number };
@@ -21,6 +21,11 @@ type CanvasElement = {
     textStyle?: string;
     ownerId: string;
 };
+
+type HistoryEntry =
+    | { type: 'create'; element: CanvasElement }
+    | { type: 'delete'; element: CanvasElement }
+    | { type: 'update'; before: CanvasElement; after: CanvasElement };
 
 /** CSS pixels; actual backing size is capped per GPU/browser (~16k per axis). */
 const CANVAS_HEIGHT = 40_000;
@@ -61,7 +66,7 @@ export default function SharedCanvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [tool, setTool] = useState<'brush' | 'text' | 'eraser'>('brush');
+    const [tool, setTool] = useState<'brush' | 'text' | 'eraser' | 'scroll'>('brush');
     const [brushType, setBrushType] = useState('solid');
     const [color, setColor] = useState('#000000');
     const [brushSize, setBrushSize] = useState(10);
@@ -71,7 +76,9 @@ export default function SharedCanvas() {
     // Ownership state
     const [visitorId, setVisitorId] = useState<string>('');
     const [elements, setElements] = useState<CanvasElement[]>([]);
-    const [syncStatus, setSyncStatus] = useState<'loading' | 'saved' | 'error'>('loading');
+    const [, setSyncStatus] = useState<'loading' | 'saved' | 'error'>('loading');
+    const [undoStack, setUndoStack] = useState<HistoryEntry[]>([]);
+    const [redoStack, setRedoStack] = useState<HistoryEntry[]>([]);
     const isDrawingRef = useRef(false);
     const isTextEditingRef = useRef(false);
     const remoteSyncPauseUntilRef = useRef(0);
@@ -517,8 +524,81 @@ export default function SharedCanvas() {
         }
     }, [loadCanvas, pauseRemoteSync]);
 
+    const upsertElementLocally = useCallback((element: CanvasElement) => {
+        setElements(prev => {
+            const existingIndex = prev.findIndex(el => el.id === element.id);
+            if (existingIndex === -1) {
+                return [...prev, element];
+            }
+
+            return prev.map(el => el.id === element.id ? element : el);
+        });
+    }, []);
+
+    const removeElementLocally = useCallback((id: string) => {
+        setElements(prev => prev.filter(el => el.id !== id));
+    }, []);
+
+    const pushHistory = useCallback((entry: HistoryEntry) => {
+        setUndoStack(prev => [...prev, entry]);
+        setRedoStack([]);
+    }, []);
+
+    const selectTool = useCallback((nextTool: 'brush' | 'text' | 'eraser' | 'scroll', subMenu: 'brush' | 'text' | 'size' | null = null) => {
+        setTool(nextTool);
+        setActiveSubMenu(subMenu);
+        setShowColorPicker(false);
+    }, []);
+
+    const applyHistoryEntry = useCallback(async (entry: HistoryEntry, direction: 'undo' | 'redo') => {
+        if (entry.type === 'create') {
+            if (direction === 'undo') {
+                removeElementLocally(entry.element.id);
+                await persistCanvasChange({ action: 'delete', id: entry.element.id, ownerId: entry.element.ownerId });
+            } else {
+                upsertElementLocally(entry.element);
+                await persistCanvasChange({ action: 'upsert', payload: entry.element });
+            }
+            return;
+        }
+
+        if (entry.type === 'delete') {
+            if (direction === 'undo') {
+                upsertElementLocally(entry.element);
+                await persistCanvasChange({ action: 'upsert', payload: entry.element });
+            } else {
+                removeElementLocally(entry.element.id);
+                await persistCanvasChange({ action: 'delete', id: entry.element.id, ownerId: entry.element.ownerId });
+            }
+            return;
+        }
+
+        const element = direction === 'undo' ? entry.before : entry.after;
+        upsertElementLocally(element);
+        await persistCanvasChange({ action: 'upsert', payload: element });
+    }, [persistCanvasChange, removeElementLocally, upsertElementLocally]);
+
+    const handleUndo = useCallback(() => {
+        const entry = undoStack[undoStack.length - 1];
+        if (!entry) return;
+
+        setUndoStack(prev => prev.slice(0, -1));
+        setRedoStack(prev => [...prev, entry]);
+        void applyHistoryEntry(entry, 'undo');
+    }, [applyHistoryEntry, undoStack]);
+
+    const handleRedo = useCallback(() => {
+        const entry = redoStack[redoStack.length - 1];
+        if (!entry) return;
+
+        setRedoStack(prev => prev.slice(0, -1));
+        setUndoStack(prev => [...prev, entry]);
+        void applyHistoryEntry(entry, 'redo');
+    }, [applyHistoryEntry, redoStack]);
+
     const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if (!visitorId) return;
+        if (tool === 'scroll') return;
 
         const { x, y } = getCoordinates(e.clientX, e.clientY);
 
@@ -569,7 +649,8 @@ export default function SharedCanvas() {
             });
 
             if (elementToErase) {
-                setElements(prev => prev.filter(el => el.id !== elementToErase.id));
+                removeElementLocally(elementToErase.id);
+                pushHistory({ type: 'delete', element: elementToErase });
                 void persistCanvasChange({ action: 'delete', id: elementToErase.id, ownerId: elementToErase.ownerId });
             }
             return;
@@ -633,7 +714,8 @@ export default function SharedCanvas() {
                 points,
                 ...activeStrokeRef.current,
             };
-            setElements(prev => [...prev, newElement]);
+            upsertElementLocally(newElement);
+            pushHistory({ type: 'create', element: newElement });
             void persistCanvasChange({ action: 'upsert', payload: newElement });
             setIsDrawing(false);
             currentPathRef.current = [];
@@ -652,8 +734,12 @@ export default function SharedCanvas() {
         if (!textInput.value.trim()) {
             if (textInput.id) {
                 // If editing an existing one and cleared it, remove it
-                setElements(prev => prev.filter(el => el.id !== textInput.id));
-                void persistCanvasChange({ action: 'delete', id: textInput.id, ownerId: visitorId });
+                const existingElement = elements.find(el => el.id === textInput.id);
+                removeElementLocally(textInput.id);
+                if (existingElement) {
+                    pushHistory({ type: 'delete', element: existingElement });
+                    void persistCanvasChange({ action: 'delete', id: textInput.id, ownerId: existingElement.ownerId });
+                }
             }
             setTextInput({ active: false, id: '', x: 0, y: 0, width: 300, value: '' });
             return;
@@ -673,10 +759,18 @@ export default function SharedCanvas() {
             ownerId: visitorId
         };
 
+        const previousElement = textInput.id ? elements.find(el => el.id === textInput.id) : undefined;
+
         if (textInput.id) {
-            setElements(prev => prev.map(el => el.id === textInput.id ? newElement : el));
+            upsertElementLocally(newElement);
+            if (previousElement) {
+                pushHistory({ type: 'update', before: previousElement, after: newElement });
+            } else {
+                pushHistory({ type: 'create', element: newElement });
+            }
         } else {
-            setElements(prev => [...prev, newElement]);
+            upsertElementLocally(newElement);
+            pushHistory({ type: 'create', element: newElement });
         }
         void persistCanvasChange({ action: 'upsert', payload: newElement });
         
@@ -714,12 +808,10 @@ export default function SharedCanvas() {
     }, [loadCanvas]);
 
     const deleteElement = useCallback((element: CanvasElement) => {
-        setElements(prev => prev.filter(el => el.id !== element.id));
+        removeElementLocally(element.id);
+        pushHistory({ type: 'delete', element });
         void persistCanvasChange({ action: 'delete', id: element.id, ownerId: element.ownerId });
-    }, [persistCanvasChange]);
-
-    const syncLabel =
-        syncStatus === 'loading' ? 'Syncing...' : syncStatus === 'error' ? 'Offline' : 'Live';
+    }, [persistCanvasChange, pushHistory, removeElementLocally]);
 
     return (
         <div className={styles.container} ref={containerRef}>
@@ -827,8 +919,7 @@ export default function SharedCanvas() {
                     <div className={styles.toolGroup}>
                         <button 
                             onClick={() => {
-                                setTool('brush');
-                                toggleSubMenu('brush');
+                                selectTool('brush', activeSubMenu === 'brush' && tool === 'brush' ? null : 'brush');
                             }} 
                             className={`${styles.toolBtn} ${tool === 'brush' ? styles.active : ''}`}
                             title="Brush"
@@ -837,8 +928,7 @@ export default function SharedCanvas() {
                         </button>
                         <button 
                             onClick={() => {
-                                setTool('text');
-                                toggleSubMenu('text');
+                                selectTool('text', activeSubMenu === 'text' && tool === 'text' ? null : 'text');
                             }} 
                             className={`${styles.toolBtn} ${tool === 'text' ? styles.active : ''}`}
                             title="Text"
@@ -847,14 +937,19 @@ export default function SharedCanvas() {
                         </button>
                         <button 
                             onClick={() => {
-                                setTool('eraser');
-                                setActiveSubMenu(null);
-                                setShowColorPicker(false);
+                                selectTool('eraser');
                             }} 
                             className={`${styles.toolBtn} ${tool === 'eraser' ? styles.active : ''}`}
                             title="Eraser (Only your art)"
                         >
                             <Eraser size={24} />
+                        </button>
+                        <button
+                            onClick={() => selectTool('scroll')}
+                            className={`${styles.toolBtn} ${tool === 'scroll' ? styles.active : ''}`}
+                            title="Scroll"
+                        >
+                            <Hand size={24} />
                         </button>
                     </div>
 
@@ -874,11 +969,21 @@ export default function SharedCanvas() {
                     </div>
 
                     <div className={styles.toolGroup}>
-                        <span className={`${styles.syncBadge} ${styles[`sync-${syncStatus}`]}`}>
-                            {syncLabel}
-                        </span>
-                        <button onClick={downloadCanvas} className={styles.actionBtn} title="Download PNG">
-                            <Download size={24} />
+                        <button
+                            onClick={handleUndo}
+                            className={styles.actionBtn}
+                            title="Undo your last action"
+                            disabled={undoStack.length === 0}
+                        >
+                            <Undo2 size={24} />
+                        </button>
+                        <button
+                            onClick={handleRedo}
+                            className={styles.actionBtn}
+                            title="Redo your last undone action"
+                            disabled={redoStack.length === 0}
+                        >
+                            <Redo2 size={24} />
                         </button>
                     </div>
                 </div>
@@ -886,7 +991,7 @@ export default function SharedCanvas() {
             </div>
             )}
 
-            <div className={styles.canvasWrapper}>
+            <div className={`${styles.canvasWrapper} ${tool === 'scroll' ? styles.canvasWrapperScrollable : ''}`}>
                 <canvas
                     ref={canvasRef}
                     onPointerDown={startDrawing}
@@ -894,7 +999,7 @@ export default function SharedCanvas() {
                     onPointerUp={stopDrawing}
                     onPointerCancel={stopDrawing}
                     onPointerLeave={stopDrawing}
-                    className={styles.mainCanvas}
+                    className={`${styles.mainCanvas} ${tool === 'scroll' ? styles.mainCanvasScrollable : ''}`}
                 />
                 
                 {textInput.active && (
@@ -963,6 +1068,10 @@ export default function SharedCanvas() {
             
             <div className={styles.infiniteBottom}>
                 <p>✨ Add your touch to the birthday wall ✨</p>
+                <button onClick={downloadCanvas} className={styles.downloadBtn}>
+                    <Download size={22} />
+                    Download PNG
+                </button>
                 <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={styles.scrollUp}>
                     <ChevronUp size={24} />
                     Back to Top

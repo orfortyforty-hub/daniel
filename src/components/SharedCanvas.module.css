@@ -178,30 +178,6 @@
     align-items: center;
 }
 
-.syncBadge {
-    padding: 0.3rem 0.7rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #ffffff;
-}
-
-.sync-loading {
-    color: #ffe58f;
-}
-
-.sync-saved {
-    color: #86efac;
-}
-
-.sync-error {
-    color: #fca5a5;
-}
-
 .toolBtn, .actionBtn {
     background: transparent;
     border: none;
@@ -217,6 +193,15 @@
 
 .toolBtn:hover, .actionBtn:hover {
     background: rgba(255, 255, 255, 0.1);
+}
+
+.toolBtn:disabled, .actionBtn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.toolBtn:disabled:hover, .actionBtn:disabled:hover {
+    background: transparent;
 }
 
 .toolBtn.active {
@@ -265,9 +250,19 @@
     overflow: hidden;
 }
 
+.canvasWrapperScrollable {
+    cursor: grab;
+    touch-action: pan-y pinch-zoom;
+}
+
 .mainCanvas {
     width: 100%;
     display: block;
+}
+
+.mainCanvasScrollable {
+    cursor: grab;
+    touch-action: pan-y pinch-zoom;
 }
 
 .textInputOverlay {
@@ -352,6 +347,28 @@
     color: #000000;
     font-family: var(--font-heading);
     font-size: 1.2rem;
+}
+
+.downloadBtn {
+    background: transparent;
+    color: #000000;
+    border: 2px solid #000000;
+    padding: 0.9rem 1.4rem;
+    border-radius: 999px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 700;
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.downloadBtn:hover {
+    background: #000000;
+    color: #ffffff;
+    transform: translateY(-1px);
 }
 
 .scrollUp {
