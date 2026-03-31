@@ -71,11 +71,14 @@ export default function SharedCanvas() {
     // Ownership state
     const [visitorId, setVisitorId] = useState<string>('');
     const [elements, setElements] = useState<CanvasElement[]>([]);
-    const [currentPath, setCurrentPath] = useState<Point[]>([]);
     const [syncStatus, setSyncStatus] = useState<'loading' | 'saved' | 'error'>('loading');
     const isDrawingRef = useRef(false);
     const isTextEditingRef = useRef(false);
     const remoteSyncPauseUntilRef = useRef(0);
+    const currentPathRef = useRef<Point[]>([]);
+    const activeStrokeRef = useRef<Omit<CanvasElement, 'id' | 'type' | 'points'> | null>(null);
+    const liveStrokeFrameRef = useRef<number | null>(null);
+    const renderedPointCountRef = useRef(0);
     
     // UI state
     const [showColorPicker, setShowColorPicker] = useState(false);
@@ -138,7 +141,7 @@ export default function SharedCanvas() {
     }, []);
 
     const drawPath = useCallback((ctx: CanvasRenderingContext2D, element: Partial<CanvasElement>) => {
-        if (!element.points || element.points.length < 2) return;
+        if (!element.points || element.points.length === 0) return;
         
         ctx.save();
         ctx.strokeStyle = element.color || '#000000';
@@ -161,6 +164,16 @@ export default function SharedCanvas() {
                 ctx.globalAlpha = 0.6;
                 ctx.lineCap = 'butt';
                 break;
+        }
+
+        if (element.points.length === 1) {
+            const point = element.points[0];
+            const radius = Math.max((element.brushSize || 10) / 2, 1);
+            ctx.beginPath();
+            ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            return;
         }
 
         if (element.brushType === 'spray') {
@@ -190,6 +203,18 @@ export default function SharedCanvas() {
             ctx.stroke();
         }
         ctx.restore();
+    }, []);
+
+    const getCanvasContext = useCallback(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas?.getContext('2d');
+
+        if (!canvas || !ctx) return null;
+
+        const dpr = window.devicePixelRatio || 1;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        return { canvas, ctx, dpr };
     }, []);
 
     const drawText = useCallback((ctx: CanvasRenderingContext2D, element: CanvasElement) => {
@@ -267,12 +292,10 @@ export default function SharedCanvas() {
     }, []);
 
     const redraw = useCallback(() => {
-        const canvas = canvasRef.current;
-        const ctx = canvas?.getContext('2d');
-        if (!canvas || !ctx) return;
+        const context = getCanvasContext();
+        if (!context) return;
 
-        const dpr = window.devicePixelRatio || 1;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // Reset transform
+        const { canvas, ctx, dpr } = context;
 
         // Clear canvas
         ctx.fillStyle = '#ffffff';
@@ -286,19 +309,47 @@ export default function SharedCanvas() {
             }
         });
 
-        // Draw current active path if drawing
-        if (isDrawing && currentPath.length > 0) {
+        if (isDrawingRef.current && activeStrokeRef.current && currentPathRef.current.length > 0) {
             drawPath(ctx, {
-                id: 'temp',
-                type: 'path',
-                points: currentPath,
-                color,
-                brushSize,
-                brushType,
-                ownerId: visitorId
+                ...activeStrokeRef.current,
+                points: currentPathRef.current,
             });
         }
-    }, [elements, currentPath, isDrawing, color, brushSize, brushType, visitorId, drawPath, drawText]);
+    }, [drawPath, drawText, elements, getCanvasContext]);
+
+    const drawLatestLiveStroke = useCallback(() => {
+        liveStrokeFrameRef.current = null;
+
+        const context = getCanvasContext();
+        if (!context || !activeStrokeRef.current) return;
+
+        const { ctx } = context;
+        const points = currentPathRef.current;
+
+        if (points.length === 0) return;
+
+        if (renderedPointCountRef.current === 0) {
+            drawPath(ctx, {
+                ...activeStrokeRef.current,
+                points: [points[0]],
+            });
+            renderedPointCountRef.current = 1;
+        }
+
+        for (let i = Math.max(1, renderedPointCountRef.current); i < points.length; i++) {
+            drawPath(ctx, {
+                ...activeStrokeRef.current,
+                points: [points[i - 1], points[i]],
+            });
+        }
+
+        renderedPointCountRef.current = points.length;
+    }, [drawPath, getCanvasContext]);
+
+    const requestLiveStrokeDraw = useCallback(() => {
+        if (liveStrokeFrameRef.current !== null) return;
+        liveStrokeFrameRef.current = window.requestAnimationFrame(drawLatestLiveStroke);
+    }, [drawLatestLiveStroke]);
 
     const initCanvas = useCallback(() => {
         const canvas = canvasRef.current;
@@ -329,6 +380,14 @@ export default function SharedCanvas() {
             window.removeEventListener('resize', handleResize);
         };
     }, [initCanvas]);
+
+    useEffect(() => {
+        return () => {
+            if (liveStrokeFrameRef.current !== null) {
+                window.cancelAnimationFrame(liveStrokeFrameRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         const link = document.createElement('link');
@@ -362,19 +421,10 @@ export default function SharedCanvas() {
         isTextEditingRef.current = textInput.active;
     }, [textInput.active]);
 
-    const getCoordinates = (e: React.MouseEvent | React.TouchEvent | MouseEvent | TouchEvent) => {
+    const getCoordinates = (clientX: number, clientY: number) => {
         const canvas = canvasRef.current;
         if (!canvas) return { x: 0, y: 0 };
         const rect = canvas.getBoundingClientRect();
-        
-        let clientX, clientY;
-        if ('touches' in e) {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else {
-            clientX = (e as MouseEvent).clientX;
-            clientY = (e as MouseEvent).clientY;
-        }
 
         return {
             x: clientX - rect.left,
@@ -467,10 +517,10 @@ export default function SharedCanvas() {
         }
     }, [loadCanvas, pauseRemoteSync]);
 
-    const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    const startDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
         if (!visitorId) return;
 
-        const { x, y } = getCoordinates(e);
+        const { x, y } = getCoordinates(e.clientX, e.clientY);
 
         if (tool === 'text') {
             if (textInput.active) {
@@ -506,6 +556,7 @@ export default function SharedCanvas() {
         }
 
         if (tool === 'eraser') {
+            e.preventDefault();
             const elementToErase = elements.find(el => {
                 if (el.ownerId !== visitorId) return false;
                 if (el.type === 'text') {
@@ -524,32 +575,70 @@ export default function SharedCanvas() {
             return;
         }
 
+        e.preventDefault();
+        e.currentTarget.setPointerCapture(e.pointerId);
         setIsDrawing(true);
-        setCurrentPath([{ x, y }]);
+        pauseRemoteSync();
+        currentPathRef.current = [{ x, y }];
+        activeStrokeRef.current = {
+            color,
+            brushSize,
+            brushType,
+            ownerId: visitorId,
+        };
+        renderedPointCountRef.current = 0;
+        requestLiveStrokeDraw();
     };
 
-    const draw = (e: React.MouseEvent | React.TouchEvent) => {
-        if (!isDrawing || tool !== 'brush') return;
+    const draw = (e: React.PointerEvent<HTMLCanvasElement>) => {
+        if (!isDrawingRef.current || tool !== 'brush') return;
         
-        const { x, y } = getCoordinates(e);
-        setCurrentPath(prev => [...prev, { x, y }]);
+        e.preventDefault();
+        const { x, y } = getCoordinates(e.clientX, e.clientY);
+        const points = currentPathRef.current;
+        const lastPoint = points[points.length - 1];
+
+        if (lastPoint && lastPoint.x === x && lastPoint.y === y) return;
+
+        points.push({ x, y });
+        requestLiveStrokeDraw();
     };
 
-    const stopDrawing = () => {
-        if (isDrawing && tool === 'brush') {
+    const stopDrawing = (e: React.PointerEvent<HTMLCanvasElement>) => {
+        if (tool === 'brush' && isDrawingRef.current) {
+            e.preventDefault();
+
+            if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+            }
+
+            if (liveStrokeFrameRef.current !== null) {
+                window.cancelAnimationFrame(liveStrokeFrameRef.current);
+                drawLatestLiveStroke();
+            }
+
+            const points = [...currentPathRef.current];
+
+            if (points.length === 0 || !activeStrokeRef.current) {
+                setIsDrawing(false);
+                currentPathRef.current = [];
+                activeStrokeRef.current = null;
+                renderedPointCountRef.current = 0;
+                return;
+            }
+
             const newElement: CanvasElement = {
                 id: Math.random().toString(36).substring(2, 15),
                 type: 'path',
-                points: currentPath,
-                color,
-                brushSize,
-                brushType,
-                ownerId: visitorId
+                points,
+                ...activeStrokeRef.current,
             };
             setElements(prev => [...prev, newElement]);
             void persistCanvasChange({ action: 'upsert', payload: newElement });
             setIsDrawing(false);
-            setCurrentPath([]);
+            currentPathRef.current = [];
+            activeStrokeRef.current = null;
+            renderedPointCountRef.current = 0;
         }
         
         if (tool === 'text' && textInput.active && textInputRef.current) {
@@ -800,13 +889,11 @@ export default function SharedCanvas() {
             <div className={styles.canvasWrapper}>
                 <canvas
                     ref={canvasRef}
-                    onMouseDown={startDrawing}
-                    onMouseMove={draw}
-                    onMouseUp={stopDrawing}
-                    onMouseLeave={stopDrawing}
-                    onTouchStart={startDrawing}
-                    onTouchMove={draw}
-                    onTouchEnd={stopDrawing}
+                    onPointerDown={startDrawing}
+                    onPointerMove={draw}
+                    onPointerUp={stopDrawing}
+                    onPointerCancel={stopDrawing}
+                    onPointerLeave={stopDrawing}
                     className={styles.mainCanvas}
                 />
                 
