@@ -66,7 +66,7 @@ export default function SharedCanvas() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
-    const [tool, setTool] = useState<'brush' | 'text' | 'eraser' | 'scroll'>('brush');
+    const [tool, setTool] = useState<'brush' | 'text' | 'eraser' | 'scroll'>('scroll');
     const [brushType, setBrushType] = useState('solid');
     const [color, setColor] = useState('#000000');
     const [brushSize, setBrushSize] = useState(10);
