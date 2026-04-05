@@ -268,7 +268,7 @@
 .textInputOverlay {
     position: absolute;
     z-index: 50;
-    padding: 0.5rem;
+    padding: 0 0.5rem 0.5rem;
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     background: rgba(255, 255, 255, 0.9);
@@ -276,12 +276,47 @@
     border: 1px solid rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
+    min-width: 140px;
 }
 
 .textInputOverlay[data-style="background"] {
-    background: inherit; /* Uses the backgroundColor from inline style */
+    background: inherit;
     border: none;
+}
+
+.textDragHandle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    padding: 7px 0 3px;
+    border-radius: 12px 12px 0 0;
+    color: rgba(0, 0, 0, 0.3);
+    transition: background 0.15s;
+}
+
+.textDragHandle:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.textDragHandle:active {
+    cursor: grabbing;
+    background: rgba(0, 0, 0, 0.08);
+}
+
+.textInputOverlay[data-style="background"] .textDragHandle {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.textInputOverlay[data-style="background"] .textDragHandle:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.textInputOverlay[data-style="background"] .textDragHandle:active {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .inlineText {
@@ -292,19 +327,51 @@
     font: inherit;
     padding: 0.2rem;
     width: 100%;
-    min-width: 150px;
     min-height: 1.2em;
-    resize: both;
+    resize: none;
     line-height: 1.2;
     overflow: hidden;
     white-space: pre-wrap;
 }
 
+.textBottomBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
 .textActions {
     display: flex;
-    justify-content: flex-end;
     gap: 0.5rem;
     pointer-events: auto;
+}
+
+.textResizeHandle {
+    width: 24px;
+    height: 24px;
+    cursor: nwse-resize;
+    touch-action: none;
+    user-select: none;
+    position: relative;
+    flex-shrink: 0;
+    margin-right: -4px;
+    margin-bottom: -4px;
+}
+
+.textResizeHandle::after {
+    content: '';
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid rgba(0, 0, 0, 0.2);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 2px 0;
+}
+
+.textInputOverlay[data-style="background"] .textResizeHandle::after {
+    border-color: rgba(255, 255, 255, 0.35);
 }
 
 .textDone, .textDelete {

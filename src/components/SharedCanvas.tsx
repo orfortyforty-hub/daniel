@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Type, Download, Trash2, Paintbrush, ChevronUp, Eraser, Hand, Undo2, Redo2 } from 'lucide-react';
+import { Type, Download, Trash2, Paintbrush, ChevronUp, Eraser, Hand, Undo2, Redo2, GripHorizontal } from 'lucide-react';
 import styles from './SharedCanvas.module.css';
 
 type Point = { x: number; y: number };
@@ -101,6 +101,8 @@ export default function SharedCanvas() {
         value: '' 
     });
     const textInputRef = useRef<HTMLTextAreaElement>(null);
+    const textDragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+    const textResizeRef = useRef<{ startX: number; origWidth: number } | null>(null);
     const [isCanvasVisible, setIsCanvasVisible] = useState(false);
     const [showCanvasScrollTop, setShowCanvasScrollTop] = useState(false);
 
@@ -550,6 +552,75 @@ export default function SharedCanvas() {
         setShowColorPicker(false);
     }, []);
 
+    const clampTextPosition = useCallback((x: number, y: number, overlayW = 240, overlayH = 150) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return { x, y };
+        const rect = canvas.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const margin = 12;
+        const toolbarGap = 120;
+
+        let cx = x;
+        let cy = y;
+
+        if (rect.left + cx + overlayW > vw - margin) cx = vw - margin - overlayW - rect.left;
+        if (rect.left + cx < margin) cx = margin - rect.left;
+        if (rect.top + cy + overlayH > vh - toolbarGap) cy = vh - toolbarGap - overlayH - rect.top;
+        if (rect.top + cy < margin) cy = margin - rect.top;
+
+        return { x: Math.max(0, cx), y: Math.max(0, cy) };
+    }, []);
+
+    const handleTextDragStart = useCallback((e: React.PointerEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        textDragRef.current = { startX: e.clientX, startY: e.clientY, origX: textInput.x, origY: textInput.y };
+    }, [textInput.x, textInput.y]);
+
+    const handleTextDragMove = useCallback((e: React.PointerEvent) => {
+        if (!textDragRef.current) return;
+        e.preventDefault();
+        const dx = e.clientX - textDragRef.current.startX;
+        const dy = e.clientY - textDragRef.current.startY;
+        setTextInput(prev => ({
+            ...prev,
+            x: Math.max(0, textDragRef.current!.origX + dx),
+            y: Math.max(0, textDragRef.current!.origY + dy),
+        }));
+    }, []);
+
+    const handleTextDragEnd = useCallback((e: React.PointerEvent) => {
+        if (!textDragRef.current) return;
+        const el = e.currentTarget as HTMLElement;
+        if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+        textDragRef.current = null;
+        setTimeout(() => textInputRef.current?.focus(), 50);
+    }, []);
+
+    const handleTextResizeStart = useCallback((e: React.PointerEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        textResizeRef.current = { startX: e.clientX, origWidth: textInput.width };
+    }, [textInput.width]);
+
+    const handleTextResizeMove = useCallback((e: React.PointerEvent) => {
+        if (!textResizeRef.current) return;
+        e.preventDefault();
+        const dx = e.clientX - textResizeRef.current.startX;
+        setTextInput(prev => ({ ...prev, width: Math.max(120, textResizeRef.current!.origWidth + dx) }));
+    }, []);
+
+    const handleTextResizeEnd = useCallback((e: React.PointerEvent) => {
+        if (!textResizeRef.current) return;
+        const el = e.currentTarget as HTMLElement;
+        if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+        textResizeRef.current = null;
+        setTimeout(() => textInputRef.current?.focus(), 50);
+    }, []);
+
     const applyHistoryEntry = useCallback(async (entry: HistoryEntry, direction: 'undo' | 'redo') => {
         if (entry.type === 'create') {
             if (direction === 'undo') {
@@ -619,16 +690,18 @@ export default function SharedCanvas() {
                 });
 
                 if (clickedElement) {
+                    const clamped = clampTextPosition(clickedElement.x || 0, clickedElement.y || 0, clickedElement.width || 300);
                     setTextInput({ 
                         active: true, 
                         id: clickedElement.id, 
-                        x: clickedElement.x || 0, 
-                        y: clickedElement.y || 0, 
+                        x: clamped.x, 
+                        y: clamped.y, 
                         width: clickedElement.width || 300,
                         value: clickedElement.value || '' 
                     });
                 } else {
-                    setTextInput({ active: true, id: '', x, y, width: 300, value: '' });
+                    const clamped = clampTextPosition(x, y);
+                    setTextInput({ active: true, id: '', x: clamped.x, y: clamped.y, width: 300, value: '' });
                 }
                 e.stopPropagation();
             }
@@ -1009,27 +1082,32 @@ export default function SharedCanvas() {
                         style={{ 
                             left: textInput.x, 
                             top: textInput.y,
+                            width: textInput.width,
                             fontFamily: fontFamily,
                             color: textStyle === 'background' ? '#ffffff' : color,
                             backgroundColor: textStyle === 'background' ? color : 'transparent',
                             fontSize: `${brushSize * 3}px`,
-                            minWidth: '200px',
-                            maxWidth: typeof window !== 'undefined' ? `${window.innerWidth - textInput.x - 40}px` : '100%'
                         }}
                     >
+                        <div
+                            className={styles.textDragHandle}
+                            onPointerDown={handleTextDragStart}
+                            onPointerMove={handleTextDragMove}
+                            onPointerUp={handleTextDragEnd}
+                            onPointerCancel={handleTextDragEnd}
+                        >
+                            <GripHorizontal size={14} />
+                        </div>
                         <textarea
                             ref={textInputRef}
                             value={textInput.value}
                             onChange={(e) => {
                                 setTextInput({ ...textInput, value: e.target.value });
-                                // Auto-grow height
                                 e.target.style.height = 'auto';
                                 e.target.style.height = e.target.scrollHeight + 'px';
                             }}
                             onFocus={(e) => {
-                                // Select all text for easy editing
                                 e.target.select();
-                                // Initialize height
                                 e.target.style.height = 'auto';
                                 e.target.style.height = e.target.scrollHeight + 'px';
                             }}
@@ -1044,23 +1122,32 @@ export default function SharedCanvas() {
                             className={styles.inlineText}
                             autoFocus
                         />
-                        <div className={styles.textActions}>
-                            <button onClick={placeText} className={styles.textDone} title="Done">✓</button>
-                            {textInput.id && (
-                                <button 
-                                    onClick={() => {
-                                        const elementToDelete = elements.find(el => el.id === textInput.id);
-                                        if (elementToDelete) {
-                                            deleteElement(elementToDelete);
-                                        }
-                                        setTextInput({ active: false, id: '', x: 0, y: 0, width: 300, value: '' });
-                                    }} 
-                                    className={styles.textDelete} 
-                                    title="Delete"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            )}
+                        <div className={styles.textBottomBar}>
+                            <div className={styles.textActions}>
+                                <button onClick={placeText} className={styles.textDone} title="Done">✓</button>
+                                {textInput.id && (
+                                    <button 
+                                        onClick={() => {
+                                            const elementToDelete = elements.find(el => el.id === textInput.id);
+                                            if (elementToDelete) {
+                                                deleteElement(elementToDelete);
+                                            }
+                                            setTextInput({ active: false, id: '', x: 0, y: 0, width: 300, value: '' });
+                                        }} 
+                                        className={styles.textDelete} 
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
+                            </div>
+                            <div
+                                className={styles.textResizeHandle}
+                                onPointerDown={handleTextResizeStart}
+                                onPointerMove={handleTextResizeMove}
+                                onPointerUp={handleTextResizeEnd}
+                                onPointerCancel={handleTextResizeEnd}
+                            />
                         </div>
                     </div>
                 )}
